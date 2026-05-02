@@ -11,6 +11,11 @@ class ApiService {
       body: jsonEncode({'email': email, 'password': password}),
       headers: {'Content-Type': 'application/json'},
     );
+    
+    if (res.statusCode != 200) {
+      throw Exception(res.body);
+    }
+    
     return jsonDecode(res.body);
   }
 
@@ -20,6 +25,13 @@ class ApiService {
       body: jsonEncode(data),
       headers: {'Content-Type': 'application/json'},
     );
+
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      // Si le serveur renvoie une erreur, on lance une exception avec le corps de la réponse
+      // Cela évitera le crash de jsonDecode si la réponse n'est pas du JSON
+      throw Exception(res.body);
+    }
+
     return jsonDecode(res.body);
   }
 
@@ -30,16 +42,18 @@ class ApiService {
   }
 
   static Future<void> addPiece(Map data) async {
-    await http.post(
+    final res = await http.post(
       Uri.parse('$baseUrl/pieces'),
       body: jsonEncode(data),
       headers: {'Content-Type': 'application/json'},
     );
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception(res.body);
+    }
   }
 
   // CATEGORIES
   static Future<List> getCategories() async {
-    // Note: Assuming there's a /categories endpoint in the backend
     final res = await http.get(Uri.parse('$baseUrl/categories'));
     return jsonDecode(res.body);
   }
@@ -51,28 +65,37 @@ class ApiService {
   }
 
   static Future<void> addFournisseur(Map data) async {
-    await http.post(
+    final res = await http.post(
       Uri.parse('$baseUrl/fournisseurs'),
       body: jsonEncode(data),
       headers: {'Content-Type': 'application/json'},
     );
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception(res.body);
+    }
   }
 
   // STOCK
   static Future<void> entree(Map data) async {
-    await http.post(
+    final res = await http.post(
       Uri.parse('$baseUrl/stock/entree'),
       body: jsonEncode(data),
       headers: {'Content-Type': 'application/json'},
     );
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception(res.body);
+    }
   }
 
   static Future<void> sortie(Map data) async {
-    await http.post(
+    final res = await http.post(
       Uri.parse('$baseUrl/stock/sortie'),
       body: jsonEncode(data),
       headers: {'Content-Type': 'application/json'},
     );
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception(res.body);
+    }
   }
 
   static Future<List> getMouvements() async {

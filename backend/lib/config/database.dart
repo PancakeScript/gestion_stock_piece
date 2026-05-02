@@ -1,14 +1,23 @@
-//configuration pour la BD
 import 'package:mysql1/mysql1.dart';
 
 Future<MySqlConnection> getConnection() async {
-  return await MySqlConnection.connect(
-    ConnectionSettings(
-      host: 'localhost',
-      port: 3306,
-      user: 'root',
-      password: '',
-      db: 'gestion_stock_piece',
-    ),
-  );
+  try {
+    final conn = await MySqlConnection.connect(
+      ConnectionSettings(
+        host: '127.0.0.1', // IMPORTANT
+        port: 3306,
+        user: 'root',
+        password:'',
+        // ⚠️ PAS de password si vide dans XAMPP
+        db: 'gestion_stock_piece',
+      ),
+    );
+
+    print('✅ Connexion MySQL réussie');
+    return conn;
+
+  } catch (e) {
+    print('❌ Erreur connexion MySQL: $e');
+    rethrow;
+  }
 }
