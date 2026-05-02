@@ -8,7 +8,7 @@ Future<MySqlConnection> getConnection() async {
         port: 3306,
         user: 'root',
         password:'',
-        // ⚠️ PAS de password si vide dans XAMPP
+        // PAS de password si vide dans XAMPP
         db: 'gestion_stock_piece',
       ),
     );
