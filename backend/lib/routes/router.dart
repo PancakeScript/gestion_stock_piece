@@ -17,8 +17,10 @@ Router get router {
   r.get('/categories', getCategories);
 
   // Pieces
-  r.get('/pieces', getPieces);
-  r.post('/pieces', addPiece);
+  r.get('/piece', getPieces);
+  r.post('/piece', addPiece);
+  r.delete('/piece/:id', deletePiece);
+  r.put('/piece/:id', editPiece);
 
   // Fournisseurs
   r.get('/fournisseurs', getFournisseurs);

@@ -7,17 +7,16 @@ Future<MySqlConnection> getConnection() async {
         host: '127.0.0.1', // IMPORTANT
         port: 3306,
         user: 'root',
-        password:'',
         // PAS de password si vide dans XAMPP
         db: 'gestion_stock_piece',
       ),
     );
 
-    print('✅ Connexion MySQL réussie');
+    print(' Connexion MySQL réussie');
     return conn;
 
   } catch (e) {
-    print('❌ Erreur connexion MySQL: $e');
+    print(' Erreur connexion MySQL: $e');
     rethrow;
   }
 }

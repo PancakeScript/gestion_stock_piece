@@ -37,19 +37,33 @@ class ApiService {
 
   // PIECES
   static Future<List> getPieces() async {
-    final res = await http.get(Uri.parse('$baseUrl/pieces'));
+    final res = await http.get(Uri.parse('$baseUrl/piece'));
     return jsonDecode(res.body);
   }
 
   static Future<void> addPiece(Map data) async {
     final res = await http.post(
-      Uri.parse('$baseUrl/pieces'),
+      Uri.parse('$baseUrl/piece'),
       body: jsonEncode(data),
       headers: {'Content-Type': 'application/json'},
     );
     if (res.statusCode != 200 && res.statusCode != 201) {
       throw Exception(res.body);
     }
+  }
+
+  static Future<void> editPiece(int id, Map data) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/piece/$id'),
+      body: jsonEncode(data),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (res.statusCode != 200) throw Exception(res.body);
+  }
+
+  static Future<void> deletePiece(int id) async {
+    final res = await http.delete(Uri.parse('$baseUrl/piece/$id'));
+    if (res.statusCode != 200) throw Exception(res.body);
   }
 
   // CATEGORIES

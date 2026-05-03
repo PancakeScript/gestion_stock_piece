@@ -1,10 +1,26 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 
-class AddPieceScreen extends StatelessWidget {
-  final nomCtrl = TextEditingController();
-  final refCtrl = TextEditingController();
-  final prixCtrl = TextEditingController();
+class EditPieceScreen extends StatefulWidget {
+  final Map piece;
+  const EditPieceScreen({required this.piece});
+
+  @override
+  State<EditPieceScreen> createState() => _EditPieceScreenState();
+}
+
+class _EditPieceScreenState extends State<EditPieceScreen> {
+  late TextEditingController nomCtrl;
+  late TextEditingController refCtrl;
+  late TextEditingController prixCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    nomCtrl = TextEditingController(text: widget.piece['nomPiece']);
+    refCtrl = TextEditingController(text: widget.piece['reference']);
+    prixCtrl = TextEditingController(text: widget.piece['prix'].toString());
+  }
 
   InputDecoration _input(String label, IconData icon) => InputDecoration(
     labelText: label,
@@ -21,7 +37,7 @@ class AddPieceScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text("Ajouter une pièce"),
+        title: Text("Modifier la pièce"),
         backgroundColor: Colors.cyan[700],
         foregroundColor: Colors.white,
       ),
@@ -46,9 +62,9 @@ class AddPieceScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 icon: Icon(Icons.save),
-                label: Text("Enregistrer", style: TextStyle(fontSize: 16)),
+                label: Text("Mettre à jour", style: TextStyle(fontSize: 16)),
                 onPressed: () async {
-                  await ApiService.addPiece({
+                  await ApiService.editPiece(widget.piece['idPiece'], {
                     "nom": nomCtrl.text,
                     "reference": refCtrl.text,
                     "prix": double.parse(prixCtrl.text),

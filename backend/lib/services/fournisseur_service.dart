@@ -18,7 +18,7 @@ class FournisseurService {
     final conn = await getConnection();
 
     await conn.query(
-      'INSERT INTO fournisseurs (nomFr, telephoneFr) VALUES (?, ?)',
+      'INSERT INTO fournisseurs (nomFr, telephone) VALUES (?, ?)',
       [nom, tel],
     );
 
