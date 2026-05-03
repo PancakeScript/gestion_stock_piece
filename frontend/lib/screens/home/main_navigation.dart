@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../categories/category_list_screen.dart';
 import '../pieces/piece_list_screen.dart';
-import '../fournisseurs/fournisseur_screen.dart';
+//import '../fournisseurs/fournisseur_screen.dart';
+import '../stock/stock_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   @override
@@ -14,7 +15,8 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _screens = [
     CategoryListScreen(),
     PieceListScreen(),
-    FournisseurScreen(),
+    //FournisseurScreen(),
+    StockScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -37,10 +39,15 @@ class _MainNavigationState extends State<MainNavigation> {
             icon: Icon(Icons.settings_suggest),
             label: 'Pièces',
           ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.business),
+          //   label: 'Fournisseurs',
+          // ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Fournisseurs',
+            icon: Icon(Icons.inventory),
+            label: 'Stock',
           ),
+
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,

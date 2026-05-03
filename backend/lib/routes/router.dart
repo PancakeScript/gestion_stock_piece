@@ -19,8 +19,9 @@ Router get router {
   // Pieces
   r.get('/piece', getPieces);
   r.post('/piece', addPiece);
-  r.delete('/piece/:id', deletePiece);
-  r.put('/piece/:id', editPiece);
+  r.put('/piece/<id>', editPiece);
+  r.delete('/piece/<id>', deletePiece);
+
 
   // Fournisseurs
   r.get('/fournisseurs', getFournisseurs);

@@ -5,12 +5,12 @@ class MouvementService {
     final conn = await getConnection();
 
     await conn.query(
-      "INSERT INTO mouvements_stock (piece_id, type, quantite) VALUES (?, 'entree', ?)",
+      "INSERT INTO mouvement (piece_id, type, quantite) VALUES (?, 'entree', ?)",
       [pieceId, quantite],
     );
 
     await conn.query(
-      "UPDATE pieces SET quantite_stock = quantite_stock + ? WHERE id = ?",
+      "UPDATE piece SET quantite_stock = quantite_stock + ? WHERE idPiece = ?",
       [quantite, pieceId],
     );
 
@@ -21,12 +21,12 @@ class MouvementService {
     final conn = await getConnection();
 
     await conn.query(
-      "INSERT INTO mouvements_stock (piece_id, type, quantite) VALUES (?, 'sortie', ?)",
+      "INSERT INTO mouvement (piece_id, type, quantite) VALUES (?, 'sortie', ?)",
       [pieceId, quantite],
     );
 
     await conn.query(
-      "UPDATE pieces SET quantite_stock = quantite_stock - ? WHERE id = ?",
+      "UPDATE piece SET quantite_stock = quantite_stock - ? WHERE idPiece = ?",
       [quantite, pieceId],
     );
 
@@ -35,7 +35,7 @@ class MouvementService {
 
   Future<List<Map>> getAll() async {
     final conn = await getConnection();
-    var results = await conn.query('SELECT * FROM mouvements_stock');
+    var results = await conn.query('SELECT * FROM mouvement');
 
     List<Map> data = [];
     for (var row in results) {
