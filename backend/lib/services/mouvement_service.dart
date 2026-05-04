@@ -35,13 +35,19 @@ class MouvementService {
 
   Future<List<Map>> getAll() async {
     final conn = await getConnection();
-    var results = await conn.query('SELECT * FROM mouvement');
-
+    var results = await conn.query('SELECT * FROM mouvement ORDER BY id DESC');
     List<Map> data = [];
     for (var row in results) {
-      data.add(row.fields);
+      Map<String, dynamic> map = {};
+      row.fields.forEach((key, value) {
+        if (value is DateTime) {
+          map[key] = value.toIso8601String();
+        } else {
+          map[key] = value;
+        }
+      });
+      data.add(map);
     }
-
     await conn.close();
     return data;
   }

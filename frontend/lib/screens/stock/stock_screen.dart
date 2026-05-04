@@ -27,13 +27,15 @@ class _StockScreenState extends State<StockScreen> {
     setState(() => loading = true);
     try {
       pieces = await ApiService.getPieces();
+      print('pieces OK: ${pieces.length}');
       filteredPieces = pieces;
       mouvements = await ApiService.getMouvements();
-      print('mouvements reçus: $mouvements');
+      print('mouvements OK: ${mouvements.length}');
+      print('detail: $mouvements');
       mouvementsFiltres = mouvements;
-      print('pieces: ${pieces.length}, mouvements: ${mouvements.length}');
-    } catch (e) {
-      print('Erreur loadData: $e');
+    } catch (e, stack) {
+      print('ERREUR: $e');
+      print('STACK: $stack');
     }
     setState(() => loading = false);
   }
