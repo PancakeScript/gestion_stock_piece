@@ -4,6 +4,7 @@ class Piece {
   String reference;
   double prix;
   int quantite_stock;
+  int? idCat;
 
   Piece({
     this.idPiece,
@@ -11,5 +12,6 @@ class Piece {
     required this.reference,
     required this.prix,
     required this.quantite_stock,
+    this.idCat,
   });
 }

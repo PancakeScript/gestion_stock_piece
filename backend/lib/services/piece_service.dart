@@ -12,20 +12,20 @@ class PieceService {
     return data;
   }
 
-  Future<void> add(String nom, String ref, double prix) async {
+  Future<void> add(String nom, String ref, double prix, int? categorieId) async {
     final conn = await getConnection();
     await conn.query(
-      'INSERT INTO piece (nomPiece, reference, prix, quantite_stock) VALUES (?, ?, ?, 0)',
-      [nom, ref, prix],
+      'INSERT INTO piece (nomPiece, reference, prix, quantite_stock, idCat) VALUES (?, ?, ?, 0, ?)',
+      [nom, ref, prix, categorieId],
     );
     await conn.close();
   }
 
-  Future<void> edit(int id, String nom, String ref, double prix) async {
+  Future<void> edit(int id, String nom, String ref, double prix, int? categorieId) async {
     final conn = await getConnection();
     await conn.query(
-      'UPDATE piece SET nomPiece=?, reference=?, prix=? WHERE idPiece=?',
-      [nom, ref, prix, id],
+      'UPDATE piece SET nomPiece=?, reference=?, prix=?, idCat=? WHERE idPiece=?',
+      [nom, ref, prix, categorieId, id],
     );
     await conn.close();
   }

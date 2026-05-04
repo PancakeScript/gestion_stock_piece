@@ -14,7 +14,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _screens = [
     CategoryListScreen(),
-    PieceListScreen(),
+    PieceListScreen(scrollToPieceId: null,),
     //FournisseurScreen(),
     StockScreen(),
   ];

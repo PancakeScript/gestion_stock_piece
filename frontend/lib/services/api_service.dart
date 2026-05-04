@@ -47,9 +47,7 @@ class ApiService {
       body: jsonEncode(data),
       headers: {'Content-Type': 'application/json'},
     );
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception(res.body);
-    }
+    if (res.statusCode != 200 && res.statusCode != 201) throw Exception(res.body);
   }
 
   static Future<void> editPiece(int id, Map data) async {
@@ -71,6 +69,30 @@ class ApiService {
     final res = await http.get(Uri.parse('$baseUrl/categories'));
     return jsonDecode(res.body);
   }
+
+  static Future<void> addCategory(Map data) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/categories'),
+      body: jsonEncode(data),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (res.statusCode != 200) throw Exception(res.body);
+  }
+
+  static Future<void> editCategory(int id, Map data) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/categories/$id'),
+      body: jsonEncode(data),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (res.statusCode != 200) throw Exception(res.body);
+  }
+
+  static Future<void> deleteCategory(int id) async {
+    final res = await http.delete(Uri.parse('$baseUrl/categories/$id'));
+    if (res.statusCode != 200) throw Exception(res.body);
+  }
+
 
   // FOURNISSEURS
   static Future<List> getFournisseurs() async {
@@ -113,7 +135,13 @@ class ApiService {
   }
 
   static Future<List> getMouvements() async {
-    final res = await http.get(Uri.parse('$baseUrl/mouvements'));
-    return jsonDecode(res.body);
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/mouvements'));
+      if (res.statusCode == 200) return jsonDecode(res.body);
+      return [];
+    } catch (e) {
+      print('Erreur getMouvements: $e');
+      return [];
+    }
   }
 }

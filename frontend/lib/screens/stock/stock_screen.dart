@@ -9,9 +9,13 @@ class StockScreen extends StatefulWidget {
 class _StockScreenState extends State<StockScreen> {
   List pieces = [];
   List mouvements = [];
+  List mouvementsFiltres = [];
   int? selectedPieceId;
+  List filteredPieces = [];
+  final pieceSearchCtrl = TextEditingController();
   final quantiteCtrl = TextEditingController();
   bool loading = true;
+  DateTime? dateFiltre;
 
   @override
   void initState() {
@@ -21,8 +25,16 @@ class _StockScreenState extends State<StockScreen> {
 
   void loadData() async {
     setState(() => loading = true);
-    pieces = await ApiService.getPieces();
-    mouvements = await ApiService.getMouvements();
+    try {
+      pieces = await ApiService.getPieces();
+      filteredPieces = pieces;
+      mouvements = await ApiService.getMouvements();
+      print('mouvements reçus: $mouvements');
+      mouvementsFiltres = mouvements;
+      print('pieces: ${pieces.length}, mouvements: ${mouvements.length}');
+    } catch (e) {
+      print('Erreur loadData: $e');
+    }
     setState(() => loading = false);
   }
 
@@ -40,12 +52,47 @@ class _StockScreenState extends State<StockScreen> {
       await ApiService.sortie(data);
     }
     quantiteCtrl.clear();
+    setState(() {
+      selectedPieceId = null;
+      pieceSearchCtrl.clear();
+    });
     loadData();
   }
 
+  void _filterPieces(String query) {
+    setState(() {
+      filteredPieces = pieces.where((p) =>
+          p['nomPiece'].toString().toLowerCase().contains(query.toLowerCase())).toList();
+    });
+  }
+
+  void _filtrerParDate(DateTime date) {
+    setState(() {
+      dateFiltre = date;
+      mouvementsFiltres = mouvements.where((m) {
+        final d = DateTime.tryParse(m['date_mouvement'].toString());
+        if (d == null) return false;
+        return d.year == date.year && d.month == date.month && d.day == date.day;
+      }).toList();
+    });
+  }
+
+  void _resetFiltre() {
+    setState(() {
+      dateFiltre = null;
+      mouvementsFiltres = mouvements;
+    });
+  }
+
   String getNomPiece(dynamic pieceId) {
-    final p = pieces.firstWhere((p) => p['idPiece'] == pieceId, orElse: () => null);
-    return p != null ? p['nomPiece'] : 'ID: $pieceId';
+    try {
+      final p = pieces.firstWhere(
+            (p) => p['idPiece'].toString() == pieceId.toString(),
+      );
+      return p['nomPiece'];
+    } catch (_) {
+      return 'Pièce $pieceId';
+    }
   }
 
   InputDecoration _input(String label, IconData icon) => InputDecoration(
@@ -70,34 +117,62 @@ class _StockScreenState extends State<StockScreen> {
       ),
       body: loading
           ? Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // FORMULAIRE
-            Card(
+          : Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // FORMULAIRE
+          SingleChildScrollView(
+            padding: EdgeInsets.all(16),
+            child: Card(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 2,
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    DropdownButtonFormField<int>(
-                      value: selectedPieceId,
-                      hint: Text("Choisir une pièce"),
+                    TextField(
+                      controller: pieceSearchCtrl,
+                      onChanged: _filterPieces,
                       decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.settings, color: Colors.cyan[700]),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        hintText: "Rechercher une pièce...",
+                        prefixIcon: Icon(Icons.search, color: Colors.cyan[700]),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none),
                       ),
-                      items: pieces.map<DropdownMenuItem<int>>((p) {
-                        return DropdownMenuItem(
-                          value: p['idPiece'],
-                          child: Text("${p['nomPiece']} — Stock: ${p['quantite_stock']}"),
-                        );
-                      }).toList(),
-                      onChanged: (value) => setState(() => selectedPieceId = value),
                     ),
+                    if (pieceSearchCtrl.text.isNotEmpty)
+                      Container(
+                        constraints: BoxConstraints(maxHeight: 180),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                        ),
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: filteredPieces.map((p) {
+                            final isSelected = selectedPieceId == p['idPiece'];
+                            return ListTile(
+                              tileColor: isSelected ? Colors.cyan[50] : null,
+                              title: Text(p['nomPiece']),
+                              subtitle: Text("Stock actuel : ${p['quantite_stock']}"),
+                              trailing: isSelected
+                                  ? Icon(Icons.check, color: Colors.cyan[700])
+                                  : null,
+                              onTap: () {
+                                setState(() {
+                                  selectedPieceId = p['idPiece'];
+                                  pieceSearchCtrl.text = p['nomPiece'];
+                                  filteredPieces = [];
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     SizedBox(height: 14),
                     TextField(
                       controller: quantiteCtrl,
@@ -113,7 +188,8 @@ class _StockScreenState extends State<StockScreen> {
                               backgroundColor: Colors.green[600],
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
                             ),
                             icon: Icon(Icons.arrow_downward),
                             label: Text("Entrée"),
@@ -127,7 +203,8 @@ class _StockScreenState extends State<StockScreen> {
                               backgroundColor: Colors.red[600],
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
                             ),
                             icon: Icon(Icons.arrow_upward),
                             label: Text("Sortie"),
@@ -140,54 +217,92 @@ class _StockScreenState extends State<StockScreen> {
                 ),
               ),
             ),
+          ),
 
-            SizedBox(height: 20),
-
-            Text("Historique des mouvements",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-
-            SizedBox(height: 8),
-
-            // HISTORIQUE
-            Expanded(
-              child: mouvements.isEmpty
-                  ? Center(child: Text("Aucun mouvement"))
-                  : ListView.builder(
-                itemCount: mouvements.length,
-                itemBuilder: (_, i) {
-                  final m = mouvements[i];
-                  final isEntree = m['type'] == 'entree';
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: isEntree ? Colors.green[100] : Colors.red[100],
-                        child: Icon(
-                          isEntree ? Icons.arrow_downward : Icons.arrow_upward,
-                          color: isEntree ? Colors.green[700] : Colors.red[700],
-                        ),
+          // HEADER HISTORIQUE + FILTRE DATE
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Historique",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Row(
+                  children: [
+                    if (dateFiltre != null)
+                      TextButton.icon(
+                        icon: Icon(Icons.clear, size: 16, color: Colors.red),
+                        label: Text("Effacer", style: TextStyle(color: Colors.red)),
+                        onPressed: _resetFiltre,
                       ),
-                      title: Text(
-                        getNomPiece(m['piece_id']),
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                    TextButton.icon(
+                      icon: Icon(Icons.calendar_today, size: 16, color: Colors.cyan[700]),
+                      label: Text(
+                        dateFiltre != null
+                            ? "${dateFiltre!.day}/${dateFiltre!.month}/${dateFiltre!.year}"
+                            : "Filtrer par date",
+                        style: TextStyle(color: Colors.cyan[700]),
                       ),
-                      subtitle: Text(isEntree ? "Entrée" : "Sortie"),
-                      trailing: Text(
-                        "${isEntree ? '+' : '-'}${m['quantite']}",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isEntree ? Colors.green[700] : Colors.red[700],
-                        ),
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) _filtrerParDate(picked);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // HISTORIQUE
+          Expanded(
+            child: mouvementsFiltres.isEmpty
+                ? Center(child: Text("Aucun mouvement"))
+                : ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              itemCount: mouvementsFiltres.length,
+              itemBuilder: (_, i) {
+                final m = mouvementsFiltres[i];
+                final isEntree = m['type'] == 'entree';
+                final date = DateTime.tryParse(m['date_mouvement'].toString());
+                final dateStr = date != null
+                    ? "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}"
+                    : '';
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor:
+                      isEntree ? Colors.green[100] : Colors.red[100],
+                      child: Icon(
+                        isEntree ? Icons.arrow_downward : Icons.arrow_upward,
+                        color: isEntree ? Colors.green[700] : Colors.red[700],
                       ),
                     ),
-                  );
-                },
-              ),
+                    title: Text(getNomPiece(m['piece_id']),
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(dateStr),
+                    trailing: Text(
+                      "${isEntree ? '+' : '-'}${m['quantite']}",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isEntree ? Colors.green[700] : Colors.red[700],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

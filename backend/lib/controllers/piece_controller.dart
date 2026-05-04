@@ -11,13 +11,24 @@ Future<Response> getPieces(Request req) async {
 
 Future<Response> addPiece(Request req) async {
   final body = jsonDecode(await req.readAsString());
-  await service.add(body['nom'], body['reference'], body['prix']);
+  await service.add(
+    body['nom'],
+    body['reference'],
+    (body['prix'] as num).toDouble(),
+    body['idCat'],
+  );
   return jsonResponse({'message': 'ok'});
 }
 
 Future<Response> editPiece(Request req, String id) async {
   final body = jsonDecode(await req.readAsString());
-  await service.edit(int.parse(id), body['nom'], body['reference'], body['prix']);
+  await service.edit(
+    int.parse(id),
+    body['nom'],
+    body['reference'],
+    (body['prix'] as num).toDouble(),
+    body['idCat'],
+  );
   return jsonResponse({'message': 'ok'});
 }
 

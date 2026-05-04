@@ -15,6 +15,9 @@ Router get router {
 
   // Categories
   r.get('/categories', getCategories);
+  r.post('/categories', addCategory);
+  r.put('/categories/<id>', editCategory);
+  r.delete('/categories/<id>', deleteCategory);
 
   // Pieces
   r.get('/piece', getPieces);
