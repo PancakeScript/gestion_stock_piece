@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../profil/profil_screen.dart';
+
 
 class StockScreen extends StatefulWidget {
   @override
@@ -116,6 +118,22 @@ class _StockScreenState extends State<StockScreen> {
         backgroundColor: Colors.cyan[700],
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProfileScreen(
+                    nom: "Utilisateur",
+                    email: "utilisateur@gmail.com",
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: loading
           ? Center(child: CircularProgressIndicator())

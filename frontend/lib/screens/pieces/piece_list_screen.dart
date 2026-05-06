@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import 'add_piece_screen.dart';
 import 'edit_piece_screen.dart';
+import '../profil/profil_screen.dart';
 
 class PieceListScreen extends StatefulWidget {
   final int? scrollToPieceId;
@@ -119,6 +120,21 @@ class _PieceListScreenState extends State<PieceListScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProfileScreen(
+                    nom: "Utilisateur",
+                    email: "utilisateur@gmail.com",
+                  ),
+                ),
+              );
+            },
+          ),
+
           if (alertes.isNotEmpty)
             IconButton(
               icon: Badge(

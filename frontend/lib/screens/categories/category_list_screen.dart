@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../pieces/piece_list_screen.dart';
+import '../profil/profil_screen.dart';
 
 class CategoryListScreen extends StatefulWidget {
   @override
@@ -170,6 +171,22 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         backgroundColor: Colors.cyan[700],
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProfileScreen(
+                    nom: "Utilisateur",
+                    email: "utilisateur@gmail.com",
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
