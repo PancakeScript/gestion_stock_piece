@@ -5,7 +5,9 @@ import 'edit_piece_screen.dart';
 
 class PieceListScreen extends StatefulWidget {
   final int? scrollToPieceId;
+
   const PieceListScreen({Key? key, this.scrollToPieceId}) : super(key: key);
+
   @override
   State<PieceListScreen> createState() => _PieceListScreenState();
 }
@@ -14,41 +16,9 @@ class _PieceListScreenState extends State<PieceListScreen> {
   List pieces = [];
   List filtered = [];
   bool loading = true;
+
   final searchCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  void _scrollTopiece() {
-    final index = pieces.indexWhere(
-      (p) => p['idPiece'] == widget.scrollToPieceId,
-    );
-    if (index != -1) {
-      _scrollController.animateTo(
-        index * 90.0,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  void load() async {
-    setState(() => loading = true);
-    if (widget.scrollToPieceId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollTopiece());
-    }
-
-    pieces = await ApiService.getPieces();
-    _filter('');
-    setState(() => loading = false);
-  }
-
-  void _filter(String query) {
-    filtered = pieces.where((p) {
-      return p['nomPiece'].toString().toLowerCase().contains(
-        query.toLowerCase(),
-      );
-    }).toList();
-    setState(() {});
-  }
 
   @override
   void initState() {
@@ -56,16 +26,65 @@ class _PieceListScreenState extends State<PieceListScreen> {
     load();
   }
 
+  @override
+  void dispose() {
+    searchCtrl.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollTopiece() {
+    final index = filtered.indexWhere(
+          (p) => p['idPiece'] == widget.scrollToPieceId,
+    );
+
+    if (index != -1 && _scrollController.hasClients) {
+      _scrollController.animateTo(
+        index * 95.0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void load() async {
+    setState(() => loading = true);
+
+    pieces = await ApiService.getPieces();
+    _filter('');
+
+    if (!mounted) return;
+
+    setState(() => loading = false);
+
+    if (widget.scrollToPieceId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollTopiece());
+    }
+  }
+
+  void _filter(String query) {
+    filtered = pieces.where((p) {
+      return p['nomPiece']
+          .toString()
+          .toLowerCase()
+          .contains(query.toLowerCase());
+    }).toList();
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   void confirmDelete(int id) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text("Supprimer"),
-        content: Text("Confirmer la suppression de cette pièce ?"),
+        title: const Text("Supprimer"),
+        content: const Text("Confirmer la suppression de cette pièce ?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Annuler"),
+            child: const Text("Annuler"),
           ),
           TextButton(
             onPressed: () async {
@@ -73,7 +92,10 @@ class _PieceListScreenState extends State<PieceListScreen> {
               await ApiService.deletePiece(id);
               load();
             },
-            child: Text("Supprimer", style: TextStyle(color: Colors.red)),
+            child: const Text(
+              "Supprimer",
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -82,7 +104,6 @@ class _PieceListScreenState extends State<PieceListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Pièces avec stock <= 5
     final alertes = pieces
         .where((p) => (p['quantite_stock'] ?? 0) <= 5)
         .toList();
@@ -90,7 +111,10 @@ class _PieceListScreenState extends State<PieceListScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text("Pièces", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Pièces",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.cyan[700],
         foregroundColor: Colors.white,
         elevation: 0,
@@ -99,133 +123,173 @@ class _PieceListScreenState extends State<PieceListScreen> {
             IconButton(
               icon: Badge(
                 label: Text('${alertes.length}'),
-                child: Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orange,
+                ),
               ),
               onPressed: () => _showAlertes(alertes),
             ),
         ],
       ),
       body: loading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(12),
-                  child: TextField(
-                    controller: searchCtrl,
-                    onChanged: _filter,
-                    decoration: InputDecoration(
-                      hintText: "Rechercher une pièce...",
-                      prefixIcon: Icon(Icons.search, color: Colors.cyan[700]),
-                      suffixIcon: searchCtrl.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Icons.clear),
-                              onPressed: () {
-                                searchCtrl.clear();
-                                _filter('');
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: searchCtrl,
+              onChanged: _filter,
+              decoration: InputDecoration(
+                hintText: "Rechercher une pièce...",
+                prefixIcon: Icon(Icons.search, color: Colors.cyan[700]),
+                suffixIcon: searchCtrl.text.isNotEmpty
+                    ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    searchCtrl.clear();
+                    _filter('');
+                  },
+                )
+                    : null,
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: filtered.isEmpty
+                ? const Center(child: Text("Aucune pièce trouvée"))
+                : ListView.builder(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              itemCount: filtered.length,
+              itemBuilder: (_, i) {
+                final p = filtered[i];
+                final stockFaible =
+                    (p['quantite_stock'] ?? 0) <= 5;
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    leading: CircleAvatar(
+                      backgroundColor: stockFaible
+                          ? Colors.orange[100]
+                          : Colors.cyan[100],
+                      child: Icon(
+                        stockFaible
+                            ? Icons.warning_amber_rounded
+                            : Icons.settings,
+                        color: stockFaible
+                            ? Colors.orange[700]
+                            : Colors.cyan[700],
                       ),
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? Center(child: Text("Aucune pièce trouvée"))
-                      : ListView.builder(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          itemCount: filtered.length,
-                          itemBuilder: (_, i) {
-                            final p = filtered[i];
-                            final stockFaible = (p['quantite_stock'] ?? 0) <= 5;
-                            return Card(
-                              margin: EdgeInsets.symmetric(vertical: 6),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                    title: Text(
+                      p['nomPiece'] ?? '',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Réf: ${p['reference']}"),
+                        Row(
+                          children: [
+                            Text(
+                              "Stock: ${p['quantite_stock']}",
+                              style: TextStyle(
+                                color: stockFaible
+                                    ? Colors.orange[700]
+                                    : Colors.grey[700],
+                                fontWeight: stockFaible
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
-                              elevation: 2,
-                              child: ListTile(
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                leading: CircleAvatar(
-                                  backgroundColor: stockFaible
-                                      ? Colors.orange[100]
-                                      : Colors.cyan[100],
-                                  child: Icon(
-                                    stockFaible
-                                        ? Icons.warning_amber_rounded
-                                        : Icons.settings,
-                                    color: stockFaible
-                                        ? Colors.orange[700]
-                                        : Colors.cyan[700],
-                                  ),
-                                ),
-                                title: Text(
-                                  p['nomPiece'] ?? '',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text("Réf: ${p['reference']}"),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Stock: ${p['quantite_stock']}",
-                                          style: TextStyle(
-                                            color: stockFaible ? Colors.orange[700] : Colors.grey[700],
-                                            fontWeight: stockFaible ? FontWeight.bold : FontWeight.normal,
-                                          ),
-                                        ),
-                                        if (stockFaible) Text(" ⚠️", style: TextStyle(fontSize: 12)),
-                                        Spacer(),
-                                        Text("${p['prix']} Ar",
-                                            style: TextStyle(color: Colors.cyan[700], fontWeight: FontWeight.bold, fontSize: 12)),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      padding: EdgeInsets.zero,
-                                      constraints: BoxConstraints(),
-                                      icon: Icon(Icons.edit, color: Colors.orange, size: 20),
-                                      onPressed: () async {
-                                        await Navigator.push(context,
-                                            MaterialPageRoute(builder: (_) => EditPieceScreen(piece: p)));
-                                        load();
-                                      },
-                                    ),
-                                    SizedBox(width: 4),
-                                    IconButton(
-                                      padding: EdgeInsets.zero,
-                                      constraints: BoxConstraints(),
-                                      icon: Icon(Icons.delete, color: Colors.red, size: 20),
-                                      onPressed: () => confirmDelete(p['idPiece']),
-                                    ),
-                                  ],
-                                ),
+                            ),
+                            if (stockFaible)
+                              const Text(
+                                " ⚠️",
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            const Spacer(),
+                            Text(
+                              "${p['prix']} Ar",
+                              style: TextStyle(
+                                color: Colors.cyan[700],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    EditPieceScreen(piece: p),
                               ),
                             );
+                            load();
                           },
                         ),
-                ),
-              ],
+                        const SizedBox(width: 4),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          onPressed: () =>
+                              confirmDelete(p['idPiece']),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Colors.cyan[700],
-        icon: Icon(Icons.add, color: Colors.white),
-        label: Text("Ajouter", style: TextStyle(color: Colors.white)),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text("Ajouter", style: TextStyle(color: Colors.white)),
         onPressed: () async {
           await Navigator.push(
             context,
@@ -240,38 +304,54 @@ class _PieceListScreenState extends State<PieceListScreen> {
   void _showAlertes(List alertes) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "⚠️ Stock faible (≤ 5)",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            SizedBox(height: 10),
-            ...alertes.map(
-              (p) => ListTile(
-                leading: Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.orange,
+      builder: (_) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        builder: (context, scrollController) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "⚠️ Stock faible (≤ 5)",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                title: Text(p['nomPiece']),
-                trailing: Text(
-                  "Stock: ${p['quantite_stock']}",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(height: 10),
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    itemCount: alertes.length,
+                    itemBuilder: (_, index) {
+                      final p = alertes[index];
+
+                      return ListTile(
+                        leading: const Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.orange,
+                        ),
+                        title: Text(p['nomPiece']),
+                        trailing: Text(
+                          "Stock: ${p['quantite_stock']}",
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
